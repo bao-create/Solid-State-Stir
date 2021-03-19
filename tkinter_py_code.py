@@ -164,7 +164,7 @@ def gui_start(queue_obj):
 
 
 
-    get_state()
+    get_state() #this should run every loop
     #Loops the above script. any lines past this point will not be executed
     #Mainloop is a default options and is actually seen as bad practice. and should be replaced eventually.
     root.mainloop()
