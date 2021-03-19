@@ -10,14 +10,35 @@ from tkinter import font
 import tkinter as tk
 from tkinter import ttk
 import matplotlib
+matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import ( FigureCanvasTkAgg, NavigationToolbar2Tk)
+from matplotlib.figure import Figure
 import matplotlib.animation as animation
 from matplotlib import style
+
+
+
+# TODO
+# Format/Readability
+# descriptive variable names
+# spaces around equals signs
+# more whitespace
+
+#tkinter Setup stuff
 style.use('ggplot')
+
+# FIELDS
+# Run Stop Button
+isRunning = BooleanVar()
+
+f = Figure(figsize=(5,5), dpi=100)
+a = f.add_subplot(111)
+
 
 #Defining Class
 class system_state:
-  def init (self, run, temp, subthermoexist, controllocation, setpoint,time_pid):
+  def init (self, run, temp, subthermoexist, controllocation, setpoint):
     self.run = False #are we running the system
     self.temp = [0,0,0,0,0,0,0,0,0,0,0,0,0] #temperature array, thermos 1-13
     self.subthermoexist= False #Does the Substrate thermocouple exist
@@ -26,13 +47,19 @@ class system_state:
     self.time_pid = time.time()
     return
 
-#Defines an object of class system_state
-Currentstate=system_state()
+#Declare an object of class system_state
+Currentstate = system_state()
+
+
 
 #==================== Back End
-Time_pid_stored=0
-temp_stored=[0,0,0,0,0,0,0,0,0,0,0,0,0]
+
+
+
+Time_pid_stored = 0
+temp_stored = [0,0,0,0,0,0,0,0,0,0,0,0,0]
 #Retrieve updates currentstate object
+
 def graph():
     temp_stored=temp_stored.append+Currentstate.temp
     Time_pid_stored=Time_pid_stored.append+Currentstate.time_pid
@@ -42,6 +69,7 @@ def graph():
     plt.xlabel('Time, s')
     plt.show()
     counter=counter+1
+    
 def retrieve():
     Currentstate.subthermoexist = isSubstrate_Thermocouple_Value
     Currentstate.controllocation = isPID_Option_Value
@@ -55,7 +83,27 @@ def on():
 def off():
     isRunning = False
     retrieve()
+    
+def animate(i):
+    pullData = open("Data.txt","r").read()
+    dataList = pullData.split('\n')
+    xList = []
+    yList = []
+    for eachLine in dataList:
+        if len(eachLine) > 1:
+            x, y = eachLine.split(',')
+            xList.append(int(x))
+            yList.append(int(y))
 
+    a.clear()
+    a.plot(xList, yList)
+
+
+
+#==================== Front End
+
+
+    
 #Now we get into tkinter
 #Defines overall box
 root = Tk()
@@ -66,8 +114,6 @@ root.title("AFSD Print Bed Interface")
 ftitle = font.Font (family="Helvetica",size=30,weight="bold")
 fbody  = font.Font (family="Helvetica",size=12)
 #style.use("ggplot")
-
-#==================== Front End
 
 #Top Label
 Title_Label = Label(root, text = "AFSD Heated Print Bed Interface", font = ftitle)
@@ -104,8 +150,7 @@ PID_Option_Substrate.place(x = 410, y = 150)
 PID_Option_TopPlate = Radiobutton(root, text = "Top Plate", variable = isPID_Option_Value, value = False)
 PID_Option_TopPlate.place(x = 410, y = 200)
 
-#Run Stop Button
-isRunning = BooleanVar()
+
 
 Start_Button = Button(root, text = "Start",  command = on, fg = "black", bd = 3, bg = "light green", font=fbody)
 Start_Button.place(x = 500, y = 250)
@@ -123,5 +168,6 @@ Submit.place(x = 10, y = 250)
 
 #Loops the above script. any lines past this point will not be executed
 #Mainloop is a default options and is actually seen as bad practice. and should be replaced eventually.
+ani = animation.FuncAnimation(f, animate, interval=1000)
 root.mainloop()
 
