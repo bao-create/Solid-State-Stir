@@ -9,6 +9,7 @@ import matplotlib.animation as animation
 from matplotlib import style
 import csv
 from queue import Queue
+import time
 style.use('ggplot')
 
 #Defining Class
@@ -167,6 +168,9 @@ def gui_start(queue_obj):
     get_state() #this should run every loop
     #Loops the above script. any lines past this point will not be executed
     #Mainloop is a default options and is actually seen as bad practice. and should be replaced eventually.
+    q.taskdone()
+    print("bottom of loop")
     root.mainloop()
-q = Queue()
-gui_start(q)
+    return
+#q = Queue()
+#gui_start(q)
