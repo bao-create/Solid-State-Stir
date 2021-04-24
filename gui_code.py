@@ -104,10 +104,13 @@ def get_state():
 
         print("temp in except block ",data_state.temp)
     print("in get_state",type(data_state))
-    print(data_state.temp)
-    if log_data:
-        print("appending array")
-        data_log_array.append(data_state.temp)
+    print("temp in gui ",data_state.temp)
+    print("size of data_q", data_q.qsize())
+    print("size of q", q.qsize())
+    #if log_data: will always log data. usere can just choose to save it
+    print("appending array")
+    temp_data_array = data_state.temp + [data_state.time]
+    data_log_array.append(temp_data_array)
     return
            
 def gui_start(queue_obj,data_q_obj):
@@ -188,11 +191,11 @@ def gui_run():
     Stop_Button.place(x = 410, y = 250)
 
     #start and stop recording
-    Start_Data_Button = Button(root, text = "Start Recording",  command = data_on, fg = "black", bd = 3, bg = "light green", font=fbody)
-    Start_Data_Button.place(x = 550, y = 350)
+    #Start_Data_Button = Button(root, text = "Start Recording",  command = data_on, fg = "black", bd = 3, bg = "light green", font=fbody)
+    #Start_Data_Button.place(x = 550, y = 350)
 
-    Stop_Data_Button = Button(root, text = "Stop recording", command = data_off, fg = "black", bd = 3, bg = "red", font = fbody)
-    Stop_Data_Button.place(x = 420, y = 350)
+    #Stop_Data_Button = Button(root, text = "Stop recording", command = data_off, fg = "black", bd = 3, bg = "red", font = fbody)
+    #Stop_Data_Button.place(x = 420, y = 350)
 
     Save_Data_Button = Button(root, text = "Save Data", command = data_save, fg = "black", bd = 3, bg = "blue", font = fbody)
     Save_Data_Button.place(x = 310, y = 350)
@@ -216,7 +219,7 @@ def gui_run():
     #Mainloop is a default options and is actually seen as bad practice. and should be replaced eventually.
     #q.taskdone()
     print("bottom of loop")
-    while True:
+    while True: #this shit updates the gui and gets the new temp data every .1 seconds. this makes sure we will not keep logging old data
     
         root.update()
         get_state()

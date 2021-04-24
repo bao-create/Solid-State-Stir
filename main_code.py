@@ -8,9 +8,7 @@ from gui_code import gui_start
 #from temp_function.py import *
 import statistics as stat
 from temp_function import *
-def dummy_thread_funct():
-    print("at dummy thread")
-    return
+
 class Thread_maker (threading.Thread): #makes the threads with names
    def __init__(self, threadID, name,target_line,args_line):
       threading.Thread.__init__(self)
@@ -40,31 +38,31 @@ class data_state_class:
 
 
 def pid_init(q,data_q): # this is going to be either the main.py file or its own.
-  print("at pid init internal")
-  pid = PID(1,1,1) #init PID object with P, I and D parameters
+  
+  pid = PID(3000,0,0) #init PID object with P, I and D parameters
   pid.sample_time = .1 #how often the pid creates an output
   pid.output_limits =(0,65535)
   data_state = data_state_class()
   
   while True: #pid loop
-    print("in pid while")
+    
      
     if not q.empty():
       control_state = q.get(block=True,timeout=1) #get the current data for run and setpoint
-      print("In try get pid")
+      
     
         
         
     
-    print("after q.get() in PID")
+    
     #print("in pid while before data_state run",data_state.temp)
-    print("running",control_state.run)
+    
     if control_state.run:
       pid.setpoint = control_state.setpoint #set the setpoint based on GUI
       
       current_temp = get_temp()
       #do the serial read shit based on number of thermocouples, and 
-      print("got temp")
+      
 
       #current_temp = [1,1,1,1,1,1,1,1,1,1,1,1,1] #full array of TC values
       data_state.temp = current_temp #update data_state variable
@@ -79,16 +77,17 @@ def pid_init(q,data_q): # this is going to be either the main.py file or its own
       
     #do gpio pwm shit to the low pass filter to control the power
     data_state.power = output #return what the SCR should be getting
+    print(output)
     gpio_pwm(output)
 #     print("temp",data_state.temp)
-    print("output",output)
-    print("queue size",q.qsize())
+    
+    
     data_q.put(data_state) #update temperature and data_state variables
     #q.taskdone() #not sure what .task_done is. part of queue lib.
 
     time.sleep(pid.sample_time) # slow down the PID loop
-    print("end of pid while")
-    print("queue size", q.qsize())
+    
+    
 
 
 init_data_q_state = data_state_class()
@@ -99,20 +98,17 @@ data_q.put(init_data_q_state)
 q.put(init_control_q)
 gui_thread = threading.Thread(name="gui_thread",target=gui_start,args=(q,data_q )) #thread creation for gui and pid idk if this is right
 pid_thread = threading.Thread(name="pid_thread",target=pid_init,args=(q,data_q ))
-dummy_thread = threading.Thread(target=dummy_thread_funct)
-print("before 1 start")
+
+
 gui_thread.start()
 print("Before 2 start")
 pid_thread.start() 
-dummy_thread.start()
-print("Dummy start")
-dummy_thread.join()
-print("Dummy join")
+
 
 print("after start") 
 gui_thread.join()
 print("after gui join")
 pid_thread.join()
 print("after pid join")
-dummy_thread.join()
+
 #might need .start() calls here
