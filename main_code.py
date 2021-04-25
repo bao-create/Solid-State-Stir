@@ -43,7 +43,7 @@ def pid_init(q,data_q): # this is going to be either the main.py file or its own
   pid.sample_time = .1 #how often the pid creates an output
   pid.output_limits =(0,65535)
   data_state = data_state_class()
-  
+  output = 0
   while True: #pid loop
     
      
@@ -60,7 +60,7 @@ def pid_init(q,data_q): # this is going to be either the main.py file or its own
     if control_state.run:
       pid.setpoint = control_state.setpoint #set the setpoint based on GUI
       
-      current_temp = get_temp()
+      current_temp = get_temp(output)
       #do the serial read shit based on number of thermocouples, and 
       
 
