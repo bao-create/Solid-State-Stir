@@ -65,6 +65,7 @@ def data_save():
      wr = csv.writer(myfile, quoting=csv.QUOTE_ALL)
      wr.writerows(data_log_array)
      print("Data saved!")
+     myfile.close()
 
 def data_on():
     global log_data
@@ -94,7 +95,7 @@ def off():
            
 def get_state():
     # do the queue operations
-    global data_state,data_log_array,log_data
+    global data_state,data_log_array,log_data, control_state
     try:
         print("in try get q gui")
         data_state = data_q.get(block=True,timeout=1)
@@ -109,8 +110,9 @@ def get_state():
     print("size of q", q.qsize())
     #if log_data: will always log data. usere can just choose to save it
     print("appending array")
-    temp_data_array = data_state.temp + [data_state.time]
-    data_log_array.append(temp_data_array)
+    if control_state.run:
+        temp_data_array = data_state.temp + [data_state.time]
+        data_log_array.append(temp_data_array)
     return
            
 def gui_start(queue_obj,data_q_obj):

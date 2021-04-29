@@ -44,6 +44,9 @@ def pid_init(q,data_q): # this is going to be either the main.py file or its own
   pid.output_limits =(0,65535)
   data_state = data_state_class()
   output = 0
+  pwm_object = gpio_pwm(0)
+  counter = 0
+  max_var = 0
   while True: #pid loop
     
      
@@ -60,10 +63,12 @@ def pid_init(q,data_q): # this is going to be either the main.py file or its own
     if control_state.run:
       pid.setpoint = control_state.setpoint #set the setpoint based on GUI
       
-      current_temp = get_temp(output)
+      current_temp_tup = get_temp(output,pwm_object,max_var,counter)
+      counter = counter + 1
       #do the serial read shit based on number of thermocouples, and 
-      
-
+      current_temp = current_temp_tup[0]
+      pwm_object = current_temp_tup[1]
+      max_var = current_temp_tup[2]
       #current_temp = [1,1,1,1,1,1,1,1,1,1,1,1,1] #full array of TC values
       data_state.temp = current_temp #update data_state variable
       data_state.time = time.time() #update time when this was taken
@@ -71,14 +76,15 @@ def pid_init(q,data_q): # this is going to be either the main.py file or its own
           
           output = pid(stat.mean(data_state.temp[6:11])) #get the PID output where 1:4 is a placeholder for the data_state varible controlling what TC are controlling the temp
       else:
-          output = pid(stat.mean(data_state.temp[0:3]))
+          output = pid(stat.mean(data_state.temp[0:1]))
     else: #if run=false
       output = 0 #no input to SCR
       
     #do gpio pwm shit to the low pass filter to control the power
     data_state.power = output #return what the SCR should be getting
-    print(output)
-    gpio_pwm(output)
+    #print("output in pid" ,output)
+    pwm_object.duty_cycle=output
+    print(pwm_object.duty_cycle)
 #     print("temp",data_state.temp)
     
     
