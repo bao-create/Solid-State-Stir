@@ -2,6 +2,7 @@ import thread
 from queue import Queue
 import time
 import simple-PID
+import statistics
 #from ross_shit.py import gui_start
 #from pid_shit.py import pid_init
 from temp_function.py import *
@@ -16,6 +17,7 @@ def pid_init(out_q): # this is going to be either the main.py file or its own.
   
   pid = PID(1,1,1) #init PID object
   pid.sample_time = .1 #how often the pid creates an output
+  pid.output_limits = (0,1)
   while True: #pid loop
     state = out_q.get() #get the current data for run and setpoint
     if state.run:
@@ -30,9 +32,9 @@ def pid_init(out_q): # this is going to be either the main.py file or its own.
       state.time_pid = time.time() #update time when this was taken
       if state.measure:
           
-          output = pid(state.temp[6:1]) #get the PID output where 1:4 is a placeholder for the state varible controlling what TC are controlling the temp
+          output = pid(mean(state.temp[6:9])) #get the PID output where 1:4 is a placeholder for the state varible controlling what TC are controlling the temp
       else
-          output = pid(state.temp[0:3])
+          output = pid(mean(state.temp[0:3]))
     else: #if run=false
       output = 0 #no input to SCR
       
@@ -58,7 +60,7 @@ class Thread_maker (threading.Thread): #makes the threads with names
 class system_state: # system state class, needs to be updated with rosses code
   def __init__ (self, run, temp, measure, setpoint,time_pid):
     self.run = False #are we running the system
-    self.temp = [0,0,0,0,0,0,0,0,0,0,0,0,0] #temperature array, thermos 1-13
+    self.temp = [0,0,0,0,0,0,0,0,0,0] #temperature array, thermos 0-9
     self.measure = True #PID from the bed(false) or substrate (true)
     self.setpoint = 400    #temp setpoint
     self.time_pid = time.time()
