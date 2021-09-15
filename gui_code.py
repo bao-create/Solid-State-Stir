@@ -1,34 +1,20 @@
-#Imports
 from tkinter import *
 from tkinter import font
 import tkinter as tk
 from tkinter import ttk
+import sys
+import os
 #import matplotlib.pyplot as plt
 #import matplotlib
 #import matplotlib.animation as animation
 #from matplotlib import style
 import csv
-from queue import *
 import time
 #style.use('ggplot')
 
-#Defining Class
-class system_state: # system state class, needs to be updated with rosses code
-  def __init__ (self):
-    self.run = False #are we running the system
-    #self.temp = [0,0,0,0,0,0,0,0,0,0,0,0,0] #temperature array, thermos 1-13
-    self.subthermoexist = False #
-    self.controllocation = True #PID from the bed(false) or substrate (true)
-    self.setpoint = 400    #temp setpoint
-    #self.time_pid = time.time()
-    #self.power = 0
-    return
-class data_state:
-    def __init__ (self):
-        self.temp=[]
-        self.power=[]
-        self.time = []
-        return
+def exit_command():
+    global system_state
+    system_state.exit = True
 
 
 def graph():
@@ -42,18 +28,11 @@ def graph():
     counter=counter+1
     
 def set_state():
-    global control_state
-    control_state.subthermoexist = isSubstrate_Thermocouple_Value.get()
-    control_state.controllocation = isPID_Option_Value.get()
-    control_state.setpoint = int(Temp_Set.get())
-    control_state.run = isRunning.get()
-    print(control_state.run)
-    print(control_state.setpoint)
-    print(control_state.controllocation)
-    print(control_state.subthermoexist)
-    #insert threading communication code here!!!!
-    q.put(control_state)
-    
+    global system_state
+    system_state.sub_thermo_exist = isSubstrate_Thermocouple_Value.get()
+    system_state.controllocation = isPID_Option_Value.get()
+    system_state.setpoint = int(Temp_Set.get())
+    system_state.pid_run = isRunning.get() 
     get_state()
     
 #Functions for on and off buttons; updates retrieve
@@ -79,63 +58,44 @@ def data_off():
     log_data = False
     return
 
-def on():
+def on(): #turns on controller
     global isRunning
     print("PID Running...")
     isRunning.set(True)
     set_state()
     return
 
-def off():
+def off(): #turns off controller
     global isRunning
     print("PID Finished!")
     isRunning.set(False)
     set_state()
     return
            
-def get_state():
-    # do the queue operations
-    global data_state,data_log_array,log_data, control_state
-    try:
-        print("in try get q gui")
-        data_state = data_q.get(block=True,timeout=1)
-        
-    except Empty:
-        print("in except empty gui")
-
-        print("temp in except block ",data_state.temp)
-    print("in get_state",type(data_state))
-    print("temp in gui ",data_state.temp)
-    print("size of data_q", data_q.qsize())
-    print("size of q", q.qsize())
-    #if log_data: will always log data. usere can just choose to save it
-    print("appending array")
-    if control_state.run:
+def get_state(): # gets the temp and time data and logs it
+    global system_state,data_state,data_log_array,log_data
+    
+    if system_state.pid_run and log_data:
         temp_data_array = data_state.temp + [data_state.time]
         data_log_array.append(temp_data_array)
     return
            
-def gui_start(queue_obj,data_q_obj):
-    #Now we get into tkinter
-    #Defines overall box
-    print("at gui_start internal")
-    global q,data_q,data_state,control_state,log_data,data_log_array, isRunning,Temp_Set, isPID_Option_Value,isSubstrate_Thermocouple_Value,Save_name #global variables becasue button commands cannot pass arguments and we need the q object passed
-    q = queue_obj #get quene object local to this file
-    #Defines an object of class system_state
-    data_q = data_q_obj
-    data_state=data_state()
-    control_state = system_state()
+def gui_start(system_state_par,data_state_par):
+    global data_state,system_state,log_data,data_log_array, isRunning,Temp_Set, isPID_Option_Value,isSubstrate_Thermocouple_Value,Save_name 
+    system_state = system_state_par #prevent global and aprameter from having same name
+    data_state = data_state_par
     log_data = False
     data_log_array = []
-    #get_state()
-    #==================== Back End
+    
     Time_pid_stored=0
     temp_stored=[0,0,0,0,0,0,0,0,0,0,0,0,0]
-    #Retrieve updates data_state object
     gui_run()
     return
 def gui_run():
-    global q,data_q,data_state,control_state,log_data,data_log_array, isRunning,Temp_Set, isPID_Option_Value,isSubstrate_Thermocouple_Value,Save_name #global variables becasue button commands cannot pass arguments and we need the q object passed
+    global data_state,system_state,log_data,data_log_array, isRunning,Temp_Set, isPID_Option_Value,isSubstrate_Thermocouple_Value,Save_name
+    if os.environ.get('DISPLAY','') == '':
+        print('no display found. Using :0.0')
+        os.environ.__setitem__('DISPLAY', ':0.0')
     root = Tk()
     
     root.geometry("1000x1000")
@@ -193,11 +153,11 @@ def gui_run():
     Stop_Button.place(x = 410, y = 250)
 
     #start and stop recording
-    #Start_Data_Button = Button(root, text = "Start Recording",  command = data_on, fg = "black", bd = 3, bg = "light green", font=fbody)
-    #Start_Data_Button.place(x = 550, y = 350)
+    Start_Data_Button = Button(root, text = "Start Recording",  command = data_on, fg = "black", bd = 3, bg = "light green", font=fbody)
+    Start_Data_Button.place(x = 550, y = 350)
 
-    #Stop_Data_Button = Button(root, text = "Stop recording", command = data_off, fg = "black", bd = 3, bg = "red", font = fbody)
-    #Stop_Data_Button.place(x = 420, y = 350)
+    Stop_Data_Button = Button(root, text = "Stop recording", command = data_off, fg = "black", bd = 3, bg = "red", font = fbody)
+    Stop_Data_Button.place(x = 420, y = 350)
 
     Save_Data_Button = Button(root, text = "Save Data", command = data_save, fg = "black", bd = 3, bg = "blue", font = fbody)
     Save_Data_Button.place(x = 310, y = 350)
@@ -211,21 +171,15 @@ def gui_run():
     Submit = Button(root, text = "Submit", command = set_state, font = fbody)
     Submit.place(x = 10, y = 250)
 
-    
+    #Exit button to kill everything
+    exit_status = BooleanVar()
+    exit_button = Button(root, text = "Shutdown All", command = exit_command, font = fbody)
+    exit_button.place(x = 10, y = 450)
 
-
-    print("before get_state gui")
-    #print("temp right before mainloop",data_state.temp)
-    get_state() #this should run every loop
-    #Loops the above script. any lines past this point will not be executed
-    #Mainloop is a default options and is actually seen as bad practice. and should be replaced eventually.
-    #q.taskdone()
-    print("bottom of loop")
-    while True: #this shit updates the gui and gets the new temp data every .1 seconds. this makes sure we will not keep logging old data
+    while not system_state.exit: #this shit updates the gui and gets the new temp data every .1 seconds. this makes sure we will not keep logging old data
     
         root.update()
         get_state()
         time.sleep(.1)
+    return
         
-#q = Queue()
-#gui_start(q)
